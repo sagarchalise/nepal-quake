@@ -124,7 +124,7 @@ var totalDeath = d3.sum(data, function(d) { return d['Total Injured']; });
 }
 
  //Load in agriculture data
- d3.csv("../data/calamity.csv", function(data) {
+ d3.csv("js/data/calamity.csv", function(data) {
 
       //Set input domain for color scale
    color.domain([
@@ -136,7 +136,7 @@ var totalDeath = d3.sum(data, function(d) { return d['Total Injured']; });
    showPopulation(data, "Nepal");
    
    // Read topojson data and create the map
-   d3.json("../data/nepal-districts.topo.json", function(error, nepal) {
+   d3.json("js/data/nepal-districts.topo.json", function(error, nepal) {
      if(error) return console.error(error);
 
      var districts = topojson.feature(nepal, nepal.objects.districts);
