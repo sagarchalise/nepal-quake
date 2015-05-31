@@ -14,4 +14,4 @@ Simply:
     
 Or
 
-    [View](https://sagarchalise.github.io/nepal-quake)
+[View](https://sagarchalise.github.io/nepal-quake)
