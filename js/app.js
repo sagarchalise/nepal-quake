@@ -27,22 +27,23 @@
  svg.append("rect")
     .attr("width", width)
     .attr("height", height);
+    
 
 var  label = svg.append("text").attr("x", "780").attr("y", "30").text("NEPAL")
  
  var g = svg.append("g");
 
-svg2  = d3.select("#chart")
+var svg2  = d3.select("#chart")
              .append("svg")
+             .attr("width", 600)
+             .attr("height", 200)
              .attr("class", "chart");
-svg3  = d3.select("#chart")
-             .append("svg")
-             .attr("class", "chart");
-function barChart(dsvg, barData, names){
+
+function barChart(dsvg, barData, names, pos){
         
 var margin = {top: 20, right: 30, bottom: 30, left: 40},
-    width = 370 - margin.left - margin.right,
-    height = 260 - margin.top - margin.bottom;
+    width = 270 - margin.left - margin.right,
+    height = 160 - margin.top - margin.bottom;
     var x = d3.scale.ordinal()
     .rangeRoundBands([0, width], .1);
 var x = d3.scale.ordinal()
@@ -57,10 +58,9 @@ var xAxis = d3.svg.axis()
 y.domain([0, d3.max(barData)]);
 
   var barWidth = x.rangeBand();
-  var chart = dsvg.attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+  var chart = dsvg
   .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + pos[0] + "," + pos[1] + ")");
     chart.append("g")
     .attr("class", "x axis")
     .attr("transform", "translate(0," + height + ")")
@@ -77,10 +77,49 @@ y.domain([0, d3.max(barData)]);
       .append("text").text(function(d){ return d;});
     chart.selectAll(".barText").data(barData).enter().append("text")
     .attr("class", "barText")
-    .attr("x", function(d, i) { return x(names[i])+40; })
-    .attr("y", 175)
+    .attr("x", function(d, i) { return x(names[i])+55; })
+    .attr("y",80)
     .attr("dy", ".35em")
     .text(function(d) { return d; });
+}
+function  pieChart(dsvg, data, label, pos){
+    if(data[0] || data[1]){
+        
+    var calcPercentage = function(val){
+        var v = (val=== 0)?val:(val/d3.sum(data)); 
+        console.log(v);
+        return v;
+    }
+    var w = 150;
+var h = 150;
+var r = h/2;
+var color = d3.scale.ordinal()
+    .range(["#6b486b", "#ff8c00"]);
+var vis = dsvg.data(data).append("g").attr("transform", "translate(" + pos[0] + "," + pos[1] + ")").attr('dx',  100).attr('dy', 100);
+var pie = d3.layout.pie().value(calcPercentage);
+
+// declare an arc generator functionma
+var arc = d3.svg.arc().outerRadius(r);
+
+// select paths, use arc generator to draw
+var arcs = vis.selectAll("g.slice").data(pie(data)).enter().append("g").attr("class", "slice");
+arcs.append("path")
+    .attr("fill", function(d, i){
+        console.log(color(i));
+        return color(i);
+    })
+    .attr("d", function (d) {
+        return arc(d);
+    });
+
+// add the text
+arcs.append("svg:text").attr("transform", function(d){
+			d.innerRadius = 0;
+			d.outerRadius = r;
+    return "translate(" + arc.centroid(d) + ")";}).attr("text-anchor", "middle").text( function(d, i) {
+    return d3.format('.02%')(d.value);}
+		);
+    }
 }
 function refreshSVG(dsvg, refresh){
     if(refresh){
@@ -88,6 +127,8 @@ function refreshSVG(dsvg, refresh){
         dsvg.remove();
       dsvg =  d3.select("#chart")
              .append("svg")
+             .attr("width", 600)
+             .attr("height", 200)
              .attr("class", "chart")
     }
     return  dsvg;
@@ -101,27 +142,30 @@ function showPopulation(data, label){
     }
     p.text(label+", Total Population: "+pop)
 }
-function deathChart(data, isNew){
-      svg2 = refreshSVG(svg2, isNew);
-svg2.append("text").attr("x", "250").attr("y", "15").text("Casualty")
+function humanChart(data, isNew){
+    svg2 = refreshSVG(svg2, isNew);
     var totalDeath = d3.sum(data, function(d) { return d['Total Death']; });
+    var totalInjured = d3.sum(data, function(d) { return d['Total Injured']; });
    var maleDeath = d3.sum(data, function(d) { return d['Death Male']; });
    var femaleDeath = d3.sum(data, function(d) { return d['Death Female']; });
-   var unknownDeath = d3.sum(data, function(d) { return d['Death Unknown']; });
-   var names =['Total', 'Male', 'Female', 'Unknown']
-   var barData = [totalDeath, maleDeath, femaleDeath, unknownDeath]
-   barChart(svg2, barData, names);
+   var maleInjured = d3.sum(data, function(d) { return d['Injured Male']; });
+   var femaleInjured = d3.sum(data, function(d) { return d['Injured Female']; });
+   var names =['Total Death', 'Total Injured']
+   var barData = [totalDeath, totalInjured]
+   barChart(svg2, barData, names, [5, 50]);
+    pieChart(svg2, [maleInjured, femaleInjured], ['M', 'F'], [450, 100]);
+    pieChart(svg2, [maleDeath, femaleDeath], ['M', 'F'], [290, 100]);
+    
 }
-function injuryChart(data, isNew){
-    svg3 = refreshSVG(svg3, isNew);
-svg3.append("text").attr("x", "250").attr("y", "15").text("Injury")
-var totalDeath = d3.sum(data, function(d) { return d['Total Injured']; });
-   var maleDeath = d3.sum(data, function(d) { return d['Injured Male']; });
-   var femaleDeath = d3.sum(data, function(d) { return d['Injured Female']; });
-   var names =['Total', 'Male', 'Female']
-   var barData = [totalDeath, maleDeath, femaleDeath]
-   barChart(svg3, barData, names);    
-}
+// function injuryChart(data, isNew){
+    // svg3 = refreshSVG(svg3, isNew);
+// svg3.append("text").attr("x", "250").attr("y", "15").text("Injury")
+   // var maleDeath = d3.sum(data, function(d) { return d['Injured Male']; });
+   // var femaleDeath = d3.sum(data, function(d) { return d['Injured Female']; });
+   // var names =['Total', 'Male', 'Female']
+   // var barData = [totalDeath, maleDeath, femaleDeath]
+   // barChart(svg3, barData, names);    
+// }
 
  //Load in agriculture data
  d3.csv("js/data/calamity.csv", function(data) {
@@ -131,8 +175,8 @@ var totalDeath = d3.sum(data, function(d) { return d['Total Injured']; });
            d3.min(data, function(d) { return d['Total Death']; }),
            d3.max(data, function(d) { return d['Total Death']; })
    ]);
-   deathChart(data, false);
-   injuryChart(data, false);
+   humanChart(data, false);
+   // injuryChart(data, false);
    showPopulation(data, "Nepal");
    
    // Read topojson data and create the map
@@ -263,8 +307,8 @@ var totalDeath = d3.sum(data, function(d) { return d['Total Injured']; });
             }
            }
            if(human){
-               deathChart([human], true);
-               injuryChart([human], true);
+               humanChart([human], true);
+               // injuryChart([human], true);
                showPopulation([human], human.District);
        }
        });
